@@ -2,7 +2,6 @@ import { calculateSpecialDeduction } from '../config/specialDeductions.js'
 import { CITY_META } from '../config/cityRules.js'
 import {
   getAdditionalIncomeRule,
-  isSigningBonusIncludedInBase,
   normalizeSigningBonusSchedule,
   SIGNING_BONUS_SCHEDULES,
 } from '../config/additionalIncomeRules.js'
@@ -55,25 +54,13 @@ export function calculateIncome(input) {
   )
   const fundEmployeeType = input.fundEmployeeType === 'new' ? 'new' : 'existing'
   const additionalIncomeRule = getAdditionalIncomeRule(input.city)
-  const signingBonusSocialIncluded = isSigningBonusIncludedInBase(
-    additionalIncomeRule,
-    'social',
-    signingBonusSchedule,
-  )
-  const signingBonusFundIncluded = isSigningBonusIncludedInBase(
-    additionalIncomeRule,
-    'fund',
-    signingBonusSchedule,
-  )
   const estimatedSocialBase = roundMoney(
     salary +
-      (additionalIncomeRule.housingAllowance.socialBase ? housingAllowance : 0) +
-      (signingBonusSocialIncluded ? signingBonus / 12 : 0),
+      (additionalIncomeRule.housingAllowance.socialBase ? housingAllowance : 0),
   )
   const estimatedFundBase = roundMoney(
     salary +
-      (additionalIncomeRule.housingAllowance.fundBase ? housingAllowance : 0) +
-      (signingBonusFundIncluded ? signingBonus / 12 : 0),
+      (additionalIncomeRule.housingAllowance.fundBase ? housingAllowance : 0),
   )
   const signingBonusPayments = allocateSigningBonus(
     signingBonus,
@@ -199,8 +186,6 @@ export function calculateIncome(input) {
     contributionBasis: {
       estimatedSocialBase,
       estimatedFundBase,
-      signingBonusSocialIncluded,
-      signingBonusFundIncluded,
       rule: additionalIncomeRule,
     },
     months,

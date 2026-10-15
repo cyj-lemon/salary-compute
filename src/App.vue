@@ -374,7 +374,7 @@ const tabs = [
             <p v-if="form.hasHousingAllowance || form.hasSigningBonus" class="base-rule-note">
               <strong>{{ CITY_META[form.city].name }}缴费基数</strong>
               <span v-if="form.hasHousingAllowance">房补：社保、公积金</span>
-              <span v-if="form.hasSigningBonus">签字费：{{ currentSigningBaseScope }}</span>
+              <span v-if="form.hasSigningBonus">签字费：不改变本年度默认缴费基数；以后核定口径：{{ currentSigningBaseScope }}</span>
             </p>
           </div>
 
@@ -790,7 +790,7 @@ const tabs = [
               <strong class="city-net">{{ formatMoney(item.annualFinalIncome) }}</strong>
               <span class="city-net-label">最终全年所得</span>
               <dl><div><dt>工资性现金到手</dt><dd>{{ formatMoney(item.annualSalaryTakeHome) }}</dd></div><div><dt>双边公积金</dt><dd>{{ formatMoney(item.annualTotalFund) }}</dd></div><div v-if="item.annualTotalSupplementaryFund > 0"><dt>其中补充公积金</dt><dd>{{ formatMoney(item.annualTotalSupplementaryFund) }}</dd></div><div><dt>税后年终奖</dt><dd>{{ formatMoney(item.annualBonusNet) }}</dd></div><div v-if="item.annualEquityGross > 0"><dt>税后股权价值</dt><dd>{{ formatMoney(item.annualEquityNet) }}</dd></div></dl>
-              <p v-if="calculationInput.housingAllowance > 0 || calculationInput.signingBonus > 0" class="city-base-rule"><span v-if="calculationInput.housingAllowance > 0">房补计社保、公积金</span><span v-if="calculationInput.signingBonus > 0">签字费计{{ signingBaseScope(item.city, calculationInput.signingBonusSchedule) }}</span></p>
+              <p v-if="calculationInput.housingAllowance > 0 || calculationInput.signingBonus > 0" class="city-base-rule"><span v-if="calculationInput.housingAllowance > 0">房补计社保、公积金</span><span v-if="calculationInput.signingBonus > 0">签字费不改变当年默认基数；以后核定口径：{{ signingBaseScope(item.city, calculationInput.signingBonusSchedule) }}</span></p>
             </article>
           </div>
           <p class="neutral-note"><Info :size="16" />最终所得包含双边公积金及税后股权价值，不等同于当年可自由支配现金；股权激励税额不因参保城市变化。</p>
@@ -822,7 +822,7 @@ const tabs = [
           </div>
           <div class="method-note">
             <CircleAlert :size="19" />
-            <p><strong>测算口径说明</strong> 默认缴费基数按月薪及当地应计入的房补、签字费折算估算；实际基数通常由上年度收入核定，已申报值不会因当月新增收入自动变化。上海补充公积金为自愿参加，本工具默认按个人和公司各 5%、与基本公积金相同基数估算。深圳仅将按月发放的签字费计入社保基数，非按月签字费仍计入公积金工资总额估算。股权部分按符合条件的上市公司激励单独计税；非上市公司递延纳税、转让所得及境外抵免不在本测算内。广东养老和失业的未决 2026 参数沿用最近有效值并标记为暂行；工伤单位费按二类行业 0.4% 估算，不影响个人到手。</p>
+            <p><strong>测算口径说明</strong> 签字费在实际发放月份并入工资薪金累计预扣个税，本年度默认缴费基数不因这笔签字费上调；实际在缴基数以已申报值为准，可在高级设置填写。默认基数仍按月薪及当地应计入的房补估算。以后重新核定基数时，任职相关签字费可能按工资总额口径计入：北京、上海、广州的社保及四城公积金通常计入；深圳社保仅按月发放的部分可能计入。上海补充公积金为自愿参加，本工具默认按个人和公司各 5%、与基本公积金相同基数估算。股权部分按符合条件的上市公司激励单独计税；非上市公司递延纳税、转让所得及境外抵免不在本测算内。广东养老和失业的未决 2026 参数沿用最近有效值并标记为暂行；工伤单位费按二类行业 0.4% 估算，不影响个人到手。</p>
           </div>
         </div>
       </section>

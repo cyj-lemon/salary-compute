@@ -11,7 +11,6 @@ import { calculateSpecialDeduction } from '../src/config/specialDeductions.js'
 import { getEffectiveRule } from '../src/calculators/policy.js'
 import { BONUS_MONTHLY_BRACKETS } from '../src/config/taxRules.js'
 import { roundMoney, sumMoney } from '../src/calculators/money.js'
-import { ADDITIONAL_INCOME_RULES } from '../src/config/additionalIncomeRules.js'
 
 const baseInput = (city, overrides = {}) => ({
   city,
@@ -447,36 +446,28 @@ test('签字费支持按月、半年和一次性三种发放方式', () => {
   assert.equal(sumMoney(oneTime.months.map((month) => month.signingBonus)), 120000)
 })
 
-test('四城额外收入缴费基数规则按城市生效', () => {
-  for (const city of ['beijing', 'shanghai', 'guangzhou']) {
-    const result = calculateIncome(baseInput(city, {
-      housingAllowance: 3000,
-      signingBonus: 60000,
-    }))
-    assert.equal(result.contributionBasis.estimatedSocialBase, 38000)
-    assert.equal(result.contributionBasis.estimatedFundBase, 38000)
-    assert.ok(ADDITIONAL_INCOME_RULES[city].signingBonus.socialBaseSchedules.includes('one-time'))
+test('签字费累计预扣个税，但不改变当年缴费基数', () => {
+  for (const city of ['beijing', 'shanghai', 'guangzhou', 'shenzhen']) {
+    const baseline = calculateIncome(baseInput(city, { bonus: 0, housingAllowance: 3000 }))
+    for (const schedule of ['monthly', 'semiannual', 'one-time']) {
+      const result = calculateIncome(baseInput(city, {
+        bonus: 0,
+        housingAllowance: 3000,
+        signingBonus: 60000,
+        signingBonusSchedule: schedule,
+      }))
+      assert.equal(result.contributionBasis.estimatedSocialBase, 33000)
+      assert.equal(result.contributionBasis.estimatedFundBase, 33000)
+      assert.ok(result.months.every((month, index) =>
+        month.social.employeeTotal === baseline.months[index].social.employeeTotal &&
+        month.fund.employeeAmount === baseline.months[index].fund.employeeAmount,
+      ))
+      assert.ok(result.summary.annualTax > baseline.summary.annualTax)
+    }
   }
-
-  const shenzhen = calculateIncome(baseInput('shenzhen', {
-    housingAllowance: 3000,
-    signingBonus: 60000,
-  }))
-  assert.equal(shenzhen.contributionBasis.estimatedSocialBase, 33000)
-  assert.equal(shenzhen.contributionBasis.estimatedFundBase, 38000)
-  assert.equal(shenzhen.contributionBasis.signingBonusSocialIncluded, false)
-  assert.equal(shenzhen.contributionBasis.signingBonusFundIncluded, true)
-
-  const shenzhenMonthly = calculateIncome(baseInput('shenzhen', {
-    housingAllowance: 3000,
-    signingBonus: 60000,
-    signingBonusSchedule: 'monthly',
-  }))
-  assert.equal(shenzhenMonthly.contributionBasis.estimatedSocialBase, 38000)
-  assert.equal(shenzhenMonthly.contributionBasis.signingBonusSocialIncluded, true)
 })
 
-test('自定义申报基数覆盖房补与签字费自动估算基数', () => {
+test('自定义申报基数覆盖默认估算基数', () => {
   const result = calculateIncome(baseInput('beijing', {
     housingAllowance: 3000,
     signingBonus: 60000,
@@ -484,7 +475,7 @@ test('自定义申报基数覆盖房补与签字费自动估算基数', () => {
   }))
   assert.equal(result.months[0].social.items.find((item) => item.key === 'pension').declaredBase, 10000)
   assert.equal(result.months[0].fund.declaredBase, 12000)
-  assert.equal(result.months[0].social.items.find((item) => item.key === 'medical').declaredBase, 38000)
+  assert.equal(result.months[0].social.items.find((item) => item.key === 'medical').declaredBase, 33000)
 })
 
 test('额外收入非法值与签字费月份会被规范化', () => {
